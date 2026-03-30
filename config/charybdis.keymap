@@ -6,6 +6,7 @@
 #include <dt-bindings/zmk/ext_power.h>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/pointing.h>
+#include <dt-bindings/zmk/rgb.h>
 
 // / {
 //     chosen { zmk,matrix_transform = &default_transform; };
@@ -322,10 +323,10 @@
         keeb_pref_layer {
             label = "FN";
             bindings = <
-&ext_power EP_TOG  &trans        &trans        &trans        &trans        &trans          &trans  &trans  &trans  &trans  &trans  &trans
-&trans             &trans        &trans        &trans        &trans        &trans          &trans  &trans  &trans  &trans  &trans  &trans
-&bt BT_CLR         &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4    &trans  &trans  &trans  &trans  &trans  &trans
-&trans             &trans        &trans        &trans        &trans        &trans          &trans  &trans  &trans  &trans  &trans  &trans
+&ext_power EP_TOG  &trans        &trans        &trans        &trans        &trans          &trans           &trans           &trans           &trans           &trans  &trans
+&rgb_ug RGB_TOG    &rgb_ug RGB_EFF  &rgb_ug RGB_HUI  &rgb_ug RGB_SAI  &rgb_ug RGB_BRI  &rgb_ug RGB_SPI    &trans           &trans           &trans           &trans  &trans  &trans
+&bt BT_CLR         &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4    &trans           &trans           &trans           &trans  &trans  &trans
+&trans             &rgb_ug RGB_EFR  &rgb_ug RGB_HUD  &rgb_ug RGB_SAD  &rgb_ug RGB_BRD  &rgb_ug RGB_SPD    &trans           &trans           &trans           &trans  &trans  &trans
                                                &trans        &trans        &trans          &trans  &trans
                                                              &trans        &trans          &trans
             >;
