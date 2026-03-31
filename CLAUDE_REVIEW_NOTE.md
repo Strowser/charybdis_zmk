@@ -547,3 +547,60 @@ Latest operational updates:
    - the pattern is not a static single-color result
    - several LEDs on the right side visibly shift between blue/purple/red over the clip
    - sampled frames do not show a total shutoff, but they do show that the output is still not holding a fully stable intended solid color
+58. Next decisive build-only isolation step:
+   - keep the same trusted `P0.17` transport (`spi3`, dummy `SCK=P0.08`, dummy `MISO=P0.06`, `H0H1`, two-byte lead-in)
+   - patch `G:\zmk-build-left-20260330\zephyr\drivers\led_strip\ws2812_spi.c` so `ws2812_strip_update_rgb()` ignores runtime pixel data
+   - force every LED to the same raw solid-blue value on the wire
+   - purpose: determine whether the remaining color/pattern drift is still transport-level corruption or higher-level underglow state
+59. The forced-solid-blue build-only driver test rebuilt successfully.
+60. Fresh forced-solid-blue UF2 ready to flash directly:
+   - `G:\zmk-build-left-20260330\build-left\zephyr\zmk.uf2`
+   - timestamp `2026-03-30 20:51:59`
+61. Sidecar source check on split behavior confirms:
+   - there is no dedicated split underglow state-sync channel continuously overriding the peripheral
+   - the central can still change peripheral underglow indirectly by sending global `&rgb_ug` behaviors
+   - evidence:
+     - `BEHAVIOR_LOCALITY_GLOBAL` in `G:\zmk-build-left-20260330\zmk\app\src\behaviors\behavior_rgb_underglow.c`
+     - split behavior forwarding in `G:\zmk-build-left-20260330\zmk\app\src\behavior.c`, `G:\zmk-build-left-20260330\zmk\app\src\split\bluetooth\central.c`, and `G:\zmk-build-left-20260330\zmk\app\src\split\bluetooth\service.c`
+62. The forced-solid-blue build-only test has now been flashed directly from:
+   - `G:\zmk-build-left-20260330\build-left\zephyr\zmk.uf2`
+   - copied to `D:\charybdis_qwerty_left.uf2`
+   - `D:` disappeared after copy, which is the expected reboot behavior
+63. Hardware result from the forced-solid-blue test:
+   - mixed colors with some LEDs off
+   - materially the same behavior seen in the earlier video
+   - conclusion: the remaining corruption is still transport/latch-level even when the wire payload is forced to one identical color
+64. Next build-only isolation step:
+   - keep the forced-solid-blue payload and the existing two-byte lead-in
+   - append a raw zero tail after the encoded pixel stream in `G:\zmk-build-left-20260330\zephyr\drivers\led_strip\ws2812_spi.c`
+   - current test uses `WS2812_SPI_TRAIL_BYTES = 64`, which is ~128 us of low time at 4 MHz
+   - purpose: guarantee a real end-of-frame latch window on every refresh
+65. The low-tail forced-solid-blue build rebuilt successfully.
+66. Fresh low-tail UF2 ready to flash directly:
+   - `G:\zmk-build-left-20260330\build-left\zephyr\zmk.uf2`
+   - timestamp `2026-03-30 20:57:46`
+67. Sidecar source check on solid underglow refresh confirms:
+   - solid effect is still refreshed on the periodic underglow timer; it is not a one-shot write
+   - `zmk_rgb_underglow_effect_solid()` is called from the timer-driven tick path in `G:\zmk-build-left-20260330\zmk\app\src\rgb_underglow.c`
+   - `led_strip_update_rgb(...)` is invoked every tick
+   - the timer period is 50 ms
+   - this makes the explicit low tail on every SPI frame a directly relevant stability test
+68. The low-tail forced-solid-blue build has now been flashed directly from:
+   - `G:\zmk-build-left-20260330\build-left\zephyr\zmk.uf2`
+   - copied to `D:\charybdis_qwerty_left.uf2`
+   - `D:` disappeared after copy, which is the expected reboot behavior
+69. Hardware result from the low-tail forced-solid-blue test:
+   - no visible change
+   - conclusion: adding an explicit end-of-frame low tail does not fix the remaining corruption on this path
+70. Next narrow same-path variable to test:
+   - keep the same `P0.17` transport, forced-solid-blue payload, and explicit low tail
+   - increase the raw lead-in from `2` bytes to `3` bytes
+   - purpose: test whether the remaining corruption is still a byte-boundary alignment issue on this pin/path
+71. The `3-byte lead-in` comparison build rebuilt successfully.
+72. Fresh `3-byte lead-in` UF2 ready to flash directly:
+   - `G:\zmk-build-left-20260330\build-left\zephyr\zmk.uf2`
+   - timestamp `2026-03-30 21:04:11`
+73. The `3-byte lead-in` comparison build has now been flashed directly from:
+   - `G:\zmk-build-left-20260330\build-left\zephyr\zmk.uf2`
+   - copied to `D:\charybdis_qwerty_left.uf2`
+   - `D:` disappeared after copy, which is the expected reboot behavior

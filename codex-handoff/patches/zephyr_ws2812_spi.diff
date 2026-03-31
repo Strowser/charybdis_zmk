@@ -1,8 +1,8 @@
 diff --git a/drivers/led_strip/ws2812_spi.c b/drivers/led_strip/ws2812_spi.c
-index c562d5c3d..88b2aadb4 100644
+index c562d5c3d..ffdcad39e 100644
 --- a/drivers/led_strip/ws2812_spi.c
 +++ b/drivers/led_strip/ws2812_spi.c
-@@ -25,6 +25,12 @@ LOG_MODULE_REGISTER(ws2812_spi);
+@@ -25,6 +25,14 @@ LOG_MODULE_REGISTER(ws2812_spi);
  
  /* spi-one-frame and spi-zero-frame in DT are for 8-bit frames. */
  #define SPI_FRAME_BITS 8
@@ -11,11 +11,21 @@ index c562d5c3d..88b2aadb4 100644
 + * prepend two raw zero bytes before the encoded pixel stream so the
 + * first actual payload byte lands on the strip's expected byte boundary.
 + */
-+#define WS2812_SPI_LEADIN_BYTES 2
++#define WS2812_SPI_LEADIN_BYTES 3
++/* Force a low tail after each frame so the strip gets a real latch window. */
++#define WS2812_SPI_TRAIL_BYTES 64
  
  /*
   * SPI master configuration:
-@@ -105,7 +111,7 @@ static int ws2812_strip_update_rgb(const struct device *dev,
+@@ -97,6 +105,7 @@ static int ws2812_strip_update_rgb(const struct device *dev,
+ {
+ 	const struct ws2812_spi_cfg *cfg = dev_cfg(dev);
+ 	const uint8_t one = cfg->one_frame, zero = cfg->zero_frame;
++	const struct led_rgb forced = {.r = 0x00, .g = 0x00, .b = 0xFF};
+ 	struct spi_buf buf = {
+ 		.buf = cfg->px_buf,
+ 		.len = cfg->px_buf_size,
+@@ -105,7 +114,7 @@ static int ws2812_strip_update_rgb(const struct device *dev,
  		.buffers = &buf,
  		.count = 1
  	};
@@ -24,23 +34,52 @@ index c562d5c3d..88b2aadb4 100644
  	size_t i;
  	int rc;
  
-@@ -113,6 +119,9 @@ static int ws2812_strip_update_rgb(const struct device *dev,
+@@ -113,6 +122,12 @@ static int ws2812_strip_update_rgb(const struct device *dev,
  		return -ENOMEM;
  	}
  
++	/* Build-only isolation test: ignore runtime RGB state and force solid blue. */
++	(void)pixels;
 +	cfg->px_buf[0] = 0x00;
 +	cfg->px_buf[1] = 0x00;
++	cfg->px_buf[2] = 0x00;
 +
  	/*
  	 * Convert pixel data into SPI frames. Each frame has pixel data
  	 * in color mapping on-wire format (e.g. GRB, GRBW, RGB, etc).
-@@ -204,7 +213,8 @@ static const struct led_strip_driver_api ws2812_spi_api = {
+@@ -129,13 +144,13 @@ static int ws2812_strip_update_rgb(const struct device *dev,
+ 				pixel = 0;
+ 				break;
+ 			case LED_COLOR_ID_RED:
+-				pixel = pixels[i].r;
++				pixel = forced.r;
+ 				break;
+ 			case LED_COLOR_ID_GREEN:
+-				pixel = pixels[i].g;
++				pixel = forced.g;
+ 				break;
+ 			case LED_COLOR_ID_BLUE:
+-				pixel = pixels[i].b;
++				pixel = forced.b;
+ 				break;
+ 			default:
+ 				return -EINVAL;
+@@ -145,6 +160,8 @@ static int ws2812_strip_update_rgb(const struct device *dev,
+ 		}
+ 	}
+ 
++	memset(px_buf, 0x00, WS2812_SPI_TRAIL_BYTES);
++
+ 	/*
+ 	 * Display the pixel data.
+ 	 */
+@@ -204,7 +221,8 @@ static const struct led_strip_driver_api ws2812_spi_api = {
  #define WS2812_SPI_ZERO_FRAME(idx) \
  	(DT_INST_PROP(idx, spi_zero_frame))
  #define WS2812_SPI_BUFSZ(idx) \
 -	(WS2812_NUM_COLORS(idx) * 8 * WS2812_SPI_NUM_PIXELS(idx))
 +	((WS2812_NUM_COLORS(idx) * 8 * WS2812_SPI_NUM_PIXELS(idx)) + \
-+	 WS2812_SPI_LEADIN_BYTES)
++	 WS2812_SPI_LEADIN_BYTES + WS2812_SPI_TRAIL_BYTES)
  
  /*
   * Retrieve the channel to color mapping (e.g. RGB, BGR, GRB, ...) from the
