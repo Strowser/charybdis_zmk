@@ -1,0 +1,2 @@
+$env:PATH = "C:\Users\rmari\AppData\Roaming\Python\Python310\site-packages\cmake\data\bin;C:\Users\rmari\AppData\Roaming\Python\Python310\Scripts;" + $env:PATH
+& "C:\Users\rmari\AppData\Roaming\Python\Python310\Scripts\west.exe" build -d build-left -p always -s zmk/app -b nice_nano_v2 -- "-DZMK_CONFIG=G:/zmk-build-left-20260330/config" "-DSHIELD=charybdis_left" "-DBOARD_ROOT=G:/zmk-build-left-20260330/module" "-DZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb" "-DGNUARMEMB_TOOLCHAIN_PATH=C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1"

@@ -1,0 +1,52 @@
+diff --git "a/G:\\Downloads\\zmk testing\\zmk-config\\config\\charybdis.keymap" "b/G:\\zmk-build-left-20260330\\config\\charybdis.keymap"
+index 013b363..5bce0e5 100644
+--- "a/G:\\Downloads\\zmk testing\\zmk-config\\config\\charybdis.keymap"	
++++ "b/G:\\zmk-build-left-20260330\\config\\charybdis.keymap"
+@@ -13,47 +13,6 @@
+ // };
+ 
+ / {
+-    /* input config for mouse move mode */
+-
+-    trackball_listener {
+-        compatible = "zmk,input-behavior-listener";
+-        device = <&vtrackball>;
+-        layers = <0 3 6>;
+-        evt-type = <INPUT_EV_REL>;
+-        x-input-code = <INPUT_REL_X>;
+-        y-input-code = <INPUT_REL_Y>;
+-        scale-multiplier = <1>;
+-        scale-divisor = <2>;
+-
+-        // bindings = <&ib_toggle_layer 7>;
+-    };
+-
+-    /* input config for snipe mode */
+-
+-    trackball_snipe_listener {
+-        compatible = "zmk,input-behavior-listener";
+-        device = <&vtrackball>;
+-        layers = <10>;
+-        evt-type = <INPUT_EV_REL>;
+-        x-input-code = <INPUT_REL_X>;
+-        y-input-code = <INPUT_REL_Y>;
+-        scale-multiplier = <1>;
+-        scale-divisor = <4>;
+-    };
+-
+-    /* input config for mouse scroll mode */
+-
+-    trackball_scroll_listener {
+-        compatible = "zmk,input-behavior-listener";
+-        device = <&vtrackball>;
+-        layers = <9>;
+-        evt-type = <INPUT_EV_REL>;
+-        x-input-code = <INPUT_REL_MISC>;
+-        y-input-code = <INPUT_REL_WHEEL>;
+-        y-invert;
+-        bindings = <&ib_wheel_scaler 1 14>;
+-    };
+-
+     /* define a resolution down scaler only for INPUT_REL_WHEEL */
+ 
+     ib_wheel_scaler: ib_wheel_scaler {

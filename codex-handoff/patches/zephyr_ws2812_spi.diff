@@ -1,0 +1,46 @@
+diff --git a/drivers/led_strip/ws2812_spi.c b/drivers/led_strip/ws2812_spi.c
+index c562d5c3d..88b2aadb4 100644
+--- a/drivers/led_strip/ws2812_spi.c
++++ b/drivers/led_strip/ws2812_spi.c
+@@ -25,6 +25,12 @@ LOG_MODULE_REGISTER(ws2812_spi);
+ 
+ /* spi-one-frame and spi-zero-frame in DT are for 8-bit frames. */
+ #define SPI_FRAME_BITS 8
++/*
++ * Build-only alignment shim recovered from the other working thread:
++ * prepend two raw zero bytes before the encoded pixel stream so the
++ * first actual payload byte lands on the strip's expected byte boundary.
++ */
++#define WS2812_SPI_LEADIN_BYTES 2
+ 
+ /*
+  * SPI master configuration:
+@@ -105,7 +111,7 @@ static int ws2812_strip_update_rgb(const struct device *dev,
+ 		.buffers = &buf,
+ 		.count = 1
+ 	};
+-	uint8_t *px_buf = cfg->px_buf;
++	uint8_t *px_buf = cfg->px_buf + WS2812_SPI_LEADIN_BYTES;
+ 	size_t i;
+ 	int rc;
+ 
+@@ -113,6 +119,9 @@ static int ws2812_strip_update_rgb(const struct device *dev,
+ 		return -ENOMEM;
+ 	}
+ 
++	cfg->px_buf[0] = 0x00;
++	cfg->px_buf[1] = 0x00;
++
+ 	/*
+ 	 * Convert pixel data into SPI frames. Each frame has pixel data
+ 	 * in color mapping on-wire format (e.g. GRB, GRBW, RGB, etc).
+@@ -204,7 +213,8 @@ static const struct led_strip_driver_api ws2812_spi_api = {
+ #define WS2812_SPI_ZERO_FRAME(idx) \
+ 	(DT_INST_PROP(idx, spi_zero_frame))
+ #define WS2812_SPI_BUFSZ(idx) \
+-	(WS2812_NUM_COLORS(idx) * 8 * WS2812_SPI_NUM_PIXELS(idx))
++	((WS2812_NUM_COLORS(idx) * 8 * WS2812_SPI_NUM_PIXELS(idx)) + \
++	 WS2812_SPI_LEADIN_BYTES)
+ 
+ /*
+  * Retrieve the channel to color mapping (e.g. RGB, BGR, GRB, ...) from the
